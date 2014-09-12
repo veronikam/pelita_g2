@@ -49,8 +49,8 @@ class JakovPlayer(AbstractPlayer):
             # list of dangerous enemy adecent positions                
 #                dangerous_enemy_adj_pos = []        
             acceptable_adjecent_pos = list(my_adjecent_pos)        
-            for position in dangerous_enemy_pos:
-#            for position in non_noisy_dangerous_enemy_pos:
+#            for position in dangerous_enemy_pos:
+            for position in non_noisy_dangerous_enemy_pos:
                 dangerous_enemy_adj_pos = self.adjacency.pos_within(position,3)
                 for enemy_adj_pos in dangerous_enemy_adj_pos:
                     if enemy_adj_pos in acceptable_adjecent_pos:                    
