@@ -29,7 +29,6 @@ at the beginning of every move:
         - very high negative weight: closest maze distance of new position to enemy destroyer
         - high positive weight: closest maze distance of new position to enemy harvester
         - positive weight: closest maze distance of new position to enemy food
-            very negative weight to move that brings you within X moves of an enemy (destroyer)
     return best move
 --> tune weights
 

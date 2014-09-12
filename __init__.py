@@ -15,7 +15,7 @@ def factory():
     return SimpleTeam("Drunk Team", DrunkPlayer(), DrunkPlayer())
 
 def franzi_factory():
-    return SimpleTeam("Franzi Team", FranziPlayer(), FranziPlayer())
+    return SimpleTeam("Franzi Team", FranziPlayer('up'), FranziPlayer('down'))
 # For testing purposes, one may use alternate factory methods::
 #
 #     def alternate_factory():
