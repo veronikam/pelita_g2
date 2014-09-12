@@ -35,12 +35,14 @@ class DrunkPlayer(AbstractPlayer):
 
         if self.sleep_rounds > 0:
             self.sleep_rounds -= 1
-            self.say("What a headache!")
+            self.say("I am confused. Very confused.")
             return stop
 
     def get_move(self):
         utility_function()
-
+        for i in range(10):
+            print self.enemy_bots[0].current_pos
+        print " "
         self.check_pause()
 
         # legal_moves returns a dict {move: position}
