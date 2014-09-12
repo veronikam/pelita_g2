@@ -1,0 +1,19 @@
+Hello fellow members of group 2!
+
+A summary of the discussion on Thursday about what we should/could do:
+
+--strategy field
+decide which strategy to use, depending on the score and position of the bots
+players should try to be away from each other?
+
+--implement a food eating strategy
+
+--implement a defending strategy
+
+--implement time-out prevention
+a basic example of this is given on the wiki
+
+--implement benchmarking 
+test players against each other in a number of test games
+
+
