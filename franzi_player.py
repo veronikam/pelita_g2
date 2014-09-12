@@ -11,13 +11,14 @@ from pelita.graph import AdjacencyList
 class FranziPlayer(AbstractPlayer):
     """ Basically a really awesome player. """
 
-    def __init__(self, priority_dir='stop', w_pdir=2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
+    def __init__(self, priority_dir='stop', w_pdir=1, w_mate=-2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
         """
         Attributes:
             - priority_dir: which direction to favor ('up' or 'down')
+            - w_pdir: how important it is to go into the favored direction
+            - w_mate: how important it is to stay within reasonable distance from the teammate
             - w_danger: how important it is to avoid enemy destroyers
             - w_eat: how important it is to eat the enemy's food
-            - w_pdir: how important it is to go into the favored direction
             - w_defend: how important it is to kill enemy harvesters
         """
         if priority_dir == 'up':
@@ -31,6 +32,7 @@ class FranziPlayer(AbstractPlayer):
         self.w_danger = w_danger
         self.w_eat = w_eat
         self.w_pdir = w_pdir
+        self.w_mate = w_mate
         self.w_defend = w_defend
         self.adjacency = None  # to store an adjacency list with all possible positions 
 
@@ -76,6 +78,7 @@ class FranziPlayer(AbstractPlayer):
         # get to know something about our surroundings
         dangerous_enemy_pos = [bot.current_pos for bot in self.enemy_bots if bot.is_destroyer]
         killable_enemy_pos = [bot.current_pos for bot in self.enemy_bots if bot.is_harvester]
+        teammate_pos = [bot.current_pos for bot in self.team_bots if not bot==self.me]
         # compute how good our current position is
         curr_min_dist_food = self.compute_min_dist(self.current_pos, self.enemy_food)
         curr_min_dist_kill = self.compute_min_dist(self.current_pos, killable_enemy_pos)
@@ -102,7 +105,12 @@ class FranziPlayer(AbstractPlayer):
                 danger_dist = self.compute_min_dist(new_pos, dangerous_enemy_pos)
                 if danger_dist < self.save_dist:
                     # the closer, the more dangerous
-                    score += self.w_danger*(1 - danger_dist/self.save_dist)                
+                    score += self.w_danger*(1 - danger_dist/self.save_dist) 
+                # to avoid redundant behavior, stay away from teammates
+                team_dist = self.compute_min_dist(new_pos, teammate_pos)
+                if team_dist < self.save_dist:
+                    # the closer, the more dangerous
+                    score += self.w_mate*(1 - team_dist/self.save_dist)              
                 # is this our preferred direction?
                 if move == self.priority_dir:
                     score += self.w_pdir
