@@ -1,0 +1,35 @@
+### Strategy - general things to consider
+
+- Highest priority: don't get eaten by an enemy destroyer
+- Other goals: eat enemy harvesters, eat enemy food
+- The bots should be somewhat distributed (to avoid redundant behavior), e.g. 1 bot in top half, one in bottom half (or slightly overlapping, in case of emergency, ...)
+- default: go after nearest enemy food, but avoid enemies at all cost
+- when enemy gets close to our space, switch from food eating to defending
+- defending: go towards harvester, avoiding enemies if you're in their space
+
+
+### Implementation - 2 Approaches
+
+(1) Merge existing players and improve their behavior (start with FoodEatingPlayer and SmartRandomPlayer):
+start as a food eater (maybe define an attribute that keeps track of the current strategy)
+at the beginning of every move:
+    - check: is an enemy on our side, i.e. is there an enemy harvester?
+        --> switch from food eating to defending
+    - as a food eater:
+        - where is the nearest piece of food from the current position (maze distance) - on respective half?
+        - what's the path to this target? would moving towards this get me within X moves of an enemy?
+    - as a defender:
+        - move to the harvesters position (without running into an enemy destroyer)
+
+(2) Give values to individual moves
+at the beginning of every move:
+    what are possible moves?
+    rate each move:
+        - one bot slightly favors up, one down to avoid redundant behavior
+        - very high negative weight: closest maze distance of new position to enemy destroyer
+        - high positive weight: closest maze distance of new position to enemy harvester
+        - positive weight: closest maze distance of new position to enemy food
+            very negative weight to move that brings you within X moves of an enemy (destroyer)
+    return best move
+--> tune weights
+
