@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
-# (Specifying utf-8 is always a good idea in Python 2.)
-
 from pelita.player import AbstractPlayer
 from pelita.datamodel import north, south, west, east, stop
-from pelita.graph import AdjacencyList, manhattan_dist
+from pelita.graph import AdjacencyList
 
 # use relative imports for things inside your module
-from .utils import utility_function
+#from .utils import utility_function
 
 
 class FranziPlayer(AbstractPlayer):
     """ Basically a really awesome player. """
 
-    def __init__(self, priority_dir='up', w_pdir=2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
+    def __init__(self, priority_dir='stop', w_pdir=2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
         """
         Attributes:
             - priority_dir: which direction to favor ('up' or 'down')
@@ -34,7 +32,7 @@ class FranziPlayer(AbstractPlayer):
         self.w_eat = w_eat
         self.w_pdir = w_pdir
         self.w_defend = w_defend
-        self.adjacency = None # to store an adjacency list with all possible positions 
+        self.adjacency = None  # to store an adjacency list with all possible positions 
 
     def set_initial(self):
         # Now ``self.current_uni`` and ``self.current_state`` are known.
@@ -71,24 +69,20 @@ class FranziPlayer(AbstractPlayer):
         if other_pos:
             return min([len(self.shortest_path(pos, i_pos)) 
                             for i_pos in other_pos])
-        else:
-            return 0
+        return 0
 
 
     def get_move(self):
         # get to know something about our surroundings
-        dangerous_enemy_pos = [bot.current_pos
-            for bot in self.enemy_bots if bot.is_destroyer]
-        killable_enemy_pos = [bot.current_pos
-            for bot in self.enemy_bots if bot.is_harvester]
+        dangerous_enemy_pos = [bot.current_pos for bot in self.enemy_bots if bot.is_destroyer]
+        killable_enemy_pos = [bot.current_pos for bot in self.enemy_bots if bot.is_harvester]
         # compute how good our current position is
         curr_min_dist_food = self.compute_min_dist(self.current_pos, self.enemy_food)
         curr_min_dist_kill = self.compute_min_dist(self.current_pos, killable_enemy_pos)
-        rated_moves = {}
+        scored_moves = {}
         for move, new_pos in list(self.legal_moves.items()):
             # filter out obviously stupid moves
-            if (move == stop or
-                new_pos in dangerous_enemy_pos):
+            if (move == stop or new_pos in dangerous_enemy_pos):
                 continue
             # killing someone is always the best move
             elif new_pos in killable_enemy_pos:
@@ -100,10 +94,10 @@ class FranziPlayer(AbstractPlayer):
                 # improvements should be a 1 field difference -- do negative values make sense?
                 # improvement in terms of getting closer to food
                 food_improve = curr_min_dist_food-self.compute_min_dist(new_pos, self.enemy_food)
-                score = self.w_eat*food_improve#max(0, food_improve)
+                score = self.w_eat*max(0, food_improve)
                 # improvement in terms of getting closer to killable enemies
                 kill_improve = curr_min_dist_kill-self.compute_min_dist(new_pos, killable_enemy_pos)
-                score += self.w_defend*kill_improve#max(0, kill_improve)
+                score += self.w_defend*max(0, kill_improve)
                 # make sure to get away from immediate danger
                 danger_dist = self.compute_min_dist(new_pos, dangerous_enemy_pos)
                 if danger_dist < self.save_dist:
@@ -112,9 +106,9 @@ class FranziPlayer(AbstractPlayer):
                 # is this our preferred direction?
                 if move == self.priority_dir:
                     score += self.w_pdir
-                rated_moves[move] = score
-        if rated_moves:
-            best_move = max(rated_moves.keys(), key=rated_moves.get)
+                scored_moves[move] = score
+        if scored_moves:
+            best_move = max(scored_moves.keys(), key=scored_moves.get)
             # is this move especially cool?
             if self.legal_moves[best_move] in self.enemy_food:
                 self.say("OmNomNom")
