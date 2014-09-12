@@ -1,3 +1,4 @@
-Name                Email                       Other
-Franziska Horn      franzi.fhorn@gmail.com      +49-178-1973727
-Lara Skuppin        lara.skuppin@tu-berlin.de   +49-176-97625049, room 604
+Name                	Email                       Other
+Franziska Horn      	franzi.fhorn@gmail.com      +49-178-1973727
+Lara Skuppin        	lara.skuppin@tu-berlin.de   +49-176-97625049, room 604
+Jakov Krstulovic Opara	jakov.krstulovic@gmail.com  +385914305802
