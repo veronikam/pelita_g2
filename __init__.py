@@ -19,7 +19,7 @@ def franzi_factory():
     return SimpleTeam("Franzi Team", FranziPlayer('up'), FranziPlayer('down'))
 
 def jakov_factory():
-    return SimpleTeam("Jakov Team", JakovPlayer('up'), JakovPlayer('down'))
+    return SimpleTeam("Jakov Team", JakovPlayer(), JakovPlayer())
 # For testing purposes, one may use alternate factory methods::
 #
 #     def alternate_factory():

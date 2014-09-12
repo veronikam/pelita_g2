@@ -13,7 +13,7 @@ from .utils import utility_function
 class FranziPlayer(AbstractPlayer):
     """ Basically a really awesome player. """
 
-    def __init__(self, priority_dir='up', w_danger=-10, w_eat=3, w_pdir=1, w_defend=10):
+    def __init__(self, priority_dir='up', w_pdir=2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
         """
         Attributes:
             - priority_dir: which direction to favor ('up' or 'down')
@@ -29,7 +29,7 @@ class FranziPlayer(AbstractPlayer):
         else:
             raise RuntimeWarning("Invalid priority_dir, use either up or down!")
             self.priority_dir = None
-        self.save_dist = 5
+        self.save_dist = float(save_dist)
         self.w_danger = w_danger
         self.w_eat = w_eat
         self.w_pdir = w_pdir
@@ -57,69 +57,23 @@ class FranziPlayer(AbstractPlayer):
         # detours introduced by using the manhattan distance as a heuristic
         return self.adjacency.a_star(pos1, pos2)
 
-    def compute_pos_min_dists(self, pos, dangerous_enemy_pos, killable_enemy_pos, food_pos):
+    def compute_min_dist(self, pos, other_pos):
         """
         Inputs:
             - pos: for which position the distances should be computed
-            - dangerous_enemy_pos: a list of positions for dangerous enemies (if any)
-            - killable_enemy_pos: a list of positions for killable enemies (if any)
-            - food_pos: a list of positions for eatable food (if any)
+            - other_pos: a list of other positions (if any)
         Returns:
-            - min_dists: a list with 3 distances: maze distance to the closest
-                -- dangerous enemy
-                -- killable enemy
-                -- eatable piece of food
-              the distance is 0 if there is no position given for one of the things
+            - min_dist: the maze distance to the closest other position in the
+                given list to our pos
+              the distance is 0 if there are no other positions given
               (or the distance is actually 0, i.e. the bot is on this spot)
         """
-        if dangerous_enemy_pos:
-            min_dist_to_dangerous_enemy = min([len(self.shortest_path(pos, i_pos)) 
-                                               for i_pos in dangerous_enemy_pos])
+        if other_pos:
+            return min([len(self.shortest_path(pos, i_pos)) 
+                            for i_pos in other_pos])
         else:
-            min_dist_to_dangerous_enemy = 0
-        if killable_enemy_pos:
-            min_dist_to_killable_enemy = min([len(self.shortest_path(pos, i_pos)) 
-                                               for i_pos in killable_enemy_pos])
-        else:
-            min_dist_to_killable_enemy = 0
-        if food_pos:
-            min_dist_to_food = min([len(self.shortest_path(pos, i_pos)) 
-                                               for i_pos in food_pos])
-        else:
-            min_dist_to_food = 0
-        return [min_dist_to_dangerous_enemy, min_dist_to_killable_enemy, min_dist_to_food]
+            return 0
 
-    def compute_pos_min_dists_simple(self, pos, dangerous_enemy_pos, killable_enemy_pos, food_pos):
-        """
-        Inputs:
-            - pos: for which position the distances should be computed
-            - dangerous_enemy_pos: a list of positions for dangerous enemies (if any)
-            - killable_enemy_pos: a list of positions for killable enemies (if any)
-            - food_pos: a list of positions for eatable food (if any)
-        Returns:
-            - min_dists: a list with 3 distances: manhattan distance to the closest
-                -- dangerous enemy
-                -- killable enemy
-                -- eatable piece of food
-              the distance is 0 if there is no position given for one of the things
-              (or the distance is actually 0, i.e. the bot is on this spot)
-        """
-        if dangerous_enemy_pos:
-            min_dist_to_dangerous_enemy = min([len(self.shortest_path(self.current_pos, pos)) 
-                                               for pos in dangerous_enemy_pos])
-        else:
-            min_dist_to_dangerous_enemy = 0
-        if killable_enemy_pos:
-            min_dist_to_killable_enemy = min([len(self.shortest_path(self.current_pos, pos)) 
-                                               for pos in killable_enemy_pos])
-        else:
-            min_dist_to_killable_enemy = 0
-        if food_pos:
-            min_dist_to_food = min([len(self.shortest_path(self.current_pos, pos)) 
-                                               for pos in food_pos])
-        else:
-            min_dist_to_food = 0
-        return [min_dist_to_dangerous_enemy, min_dist_to_killable_enemy, min_dist_to_food]
 
     def get_move(self):
         # get to know something about our surroundings
@@ -128,30 +82,33 @@ class FranziPlayer(AbstractPlayer):
         killable_enemy_pos = [bot.current_pos
             for bot in self.enemy_bots if bot.is_harvester]
         # compute how good our current position is
-        curr_min_dists = self.compute_pos_min_dists(self.current_pos, 
-                              dangerous_enemy_pos, killable_enemy_pos, self.enemy_food)
-        #print curr_min_dists
+        curr_min_dist_food = self.compute_min_dist(self.current_pos, self.enemy_food)
+        curr_min_dist_kill = self.compute_min_dist(self.current_pos, killable_enemy_pos)
         rated_moves = {}
         for move, new_pos in list(self.legal_moves.items()):
             # filter out obviously stupid moves
             if (move == stop or
                 new_pos in dangerous_enemy_pos):
                 continue
+            # killing someone is always the best move
+            elif new_pos in killable_enemy_pos:
+                self.say("MUHAHAHAHAHA!!!")
+                return move
             # compute the goodness of the new position
             else:
-                # new distances
-                new_min_dists = self.compute_pos_min_dists(new_pos, dangerous_enemy_pos,
-                                      killable_enemy_pos, self.enemy_food)
-                #print "Move: %r - %r"%(move, new_min_dists)
-                ## compute the score of the move
+                ## compute the score of the move 
+                # improvements should be a 1 field difference -- do negative values make sense?
                 # improvement in terms of getting closer to food
-                score = self.w_eat*(curr_min_dists[2]-new_min_dists[2])
-                # improvement in terms of getting further away from danger
-                # only relevant if we're actually close
-                if new_min_dists[0] < self.save_dist:
-                    score += self.w_danger*(curr_min_dists[0]-new_min_dists[0])
+                food_improve = curr_min_dist_food-self.compute_min_dist(new_pos, self.enemy_food)
+                score = self.w_eat*food_improve#max(0, food_improve)
                 # improvement in terms of getting closer to killable enemies
-                score += self.w_defend*(curr_min_dists[1]-new_min_dists[1])
+                kill_improve = curr_min_dist_kill-self.compute_min_dist(new_pos, killable_enemy_pos)
+                score += self.w_defend*kill_improve#max(0, kill_improve)
+                # make sure to get away from immediate danger
+                danger_dist = self.compute_min_dist(new_pos, dangerous_enemy_pos)
+                if danger_dist < self.save_dist:
+                    # the closer, the more dangerous
+                    score += self.w_danger*(1 - danger_dist/self.save_dist)                
                 # is this our preferred direction?
                 if move == self.priority_dir:
                     score += self.w_pdir
@@ -161,8 +118,6 @@ class FranziPlayer(AbstractPlayer):
             # is this move especially cool?
             if self.legal_moves[best_move] in self.enemy_food:
                 self.say("OmNomNom")
-            elif self.legal_moves[best_move] in killable_enemy_pos:
-                self.say("MUHAHAHAHAHA!!!")
             return best_move
         else:
             # we ran out of smart moves
