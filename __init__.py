@@ -3,16 +3,18 @@
 
 from pelita.player import SimpleTeam
 from .demo_player import DrunkPlayer
+from FoodEatingPlayer import FoodEatingPlayer 
+from JakovPlayer import JakovPlayer
 from .franzi_player import FranziPlayer
-# (please use relative imports inside your module)
 
+# (please use relative imports inside your module)
 # The default factory method, which this module must export.
 # It must return an instance of `SimpleTeam`  containing
 # the name of the team and the respective instances for
 # the first and second player.
 
-def factory():
-    return SimpleTeam("Drunk Team", DrunkPlayer(), DrunkPlayer())
+def jakov_factory():
+    return SimpleTeam("group2 Team", JakovPlayer(), DrunkPlayer())
 
 def franzi_factory():
     return SimpleTeam("Franzi Team", FranziPlayer('up'), FranziPlayer('down'))
