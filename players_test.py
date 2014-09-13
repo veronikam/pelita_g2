@@ -11,12 +11,13 @@ from players.SmartRandomPlayer import SmartRandomPlayer
 
 class Simulation():
 
-    def __init__(self, teams, n_sim, game_time=300, seed=20):
+    def __init__(self, teams, n_sim, game_time=300, seed=20, fname = "stats.txt"):
         # do (only) initializations here
         self.teams = teams
         self.n_sim = n_sim
         self.game_time = game_time
-        self.seed = seed        
+        self.seed = seed 
+        self.fname = fname       
         self.stats = {"winning_team": [], "food_eaten":{"t0":[],"t1":[]}, "rounds": [], "team_disqualified": [], "timeout_teams": {"t0":[],"t1":[]}, 
                         "team_time": {"t0":[],"t1":[]}, "bots_destroyed": [], "times_killed": {"t0":[],"t1":[]}, "score":{"t0":[],"t1":[]} }
         self.score = [0, 0]
@@ -62,55 +63,54 @@ class Simulation():
     
     def get_stats(self):
                 
-        f = open("stats.txt", 'w')
+        self.f = open(self.fname, 'w')
         
-        f.write(str(self.stats)+"\n")
+        self.f.write(str(self.stats)+"\n")
         print self.stats
         
         #---Number of winnig times
         n_win = "Number of games won by team 0: %d, team1: %d" %(self.score[0], self.score[1])        
         print n_win
-        f.write(n_win+"\n")
+        self.f.write(n_win+"\n")
         
         #---Average rounds
         av_rounds = float(sum(self.stats["rounds"]))/self.n_sim
         rounds_str = "Average rounds: %d" %(av_rounds)        
         print rounds_str
-        f.write(rounds_str+"\n")
+        self.f.write(rounds_str+"\n")
 
 
         #---Average food eaten
-        av_food0 = float(sum(self.stats["food_eaten"]["t0"]))/float(self.n_sim)
-        av_food1 = float(sum(self.stats["food_eaten"]["t1"]))/float(self.n_sim)
-        food_string = "Average food eaten by team 0: %2f, team1: %2f" %(av_food0, av_food1)        
-        print food_string
-        f.write(food_string+"\n")
-        
+        self.write_stats_line("Average food eaten by", "food_eaten")
         #---Sum of time outs
-        sum_timeouts0 = sum(self.stats["timeout_teams"]["t0"])
-        sum_timeouts1 = sum(self.stats["timeout_teams"]["t1"])
-        timeout_string = "Timeouts by team 0: %d, team1: %d" %(sum_timeouts0, sum_timeouts1)        
-        print timeout_string
-        f.write(timeout_string+"\n")
-        
+        self.write_stats_line("Timeouts by", "timeout_teams",
+            is_average = None, is_float = None)
         #---Average time
-        av_time0 = float(sum(self.stats["team_time"]["t0"]))/float(self.n_sim)
-        av_time1 = float(sum(self.stats["team_time"]["t1"]))/float(self.n_sim)
-        time_string = "Average game time for team0: %2f, team1: %2f" %( av_time0,  av_time1)        
-        print time_string
-        f.write(time_string+"\n") 
+        self.write_stats_line("Average game time for", "team_time")
+        #---Sum of times killed
+        self.write_stats_line("Bots killed of", "times_killed",
+            is_average = None, is_float = None)
+        
+        self.f.close()
 
-        #---Average times killed
-        av_killed0 = float(sum(self.stats["times_killed"]["t0"]))/float(self.n_sim)
-        av_killed1 = float(sum(self.stats["times_killed"]["t1"]))/float(self.n_sim)
-        killed_string = "Average times killed for team 0: %2f, team1: %2f" %(av_killed0, av_killed1)        
-        print killed_string
-        f.write(killed_string+"\n")       
+    def write_stats_line(self, title, key, is_average = True, is_float = True):
         
+        sum0 = sum(self.stats[key]["t0"]); sum1 = sum(self.stats[key]["t1"])
         
+        if is_average: 
+            n = self.n_sim   
+        else:
+            n = 1
         
-        f.close()
-                
+        if is_float:
+            sum0 = float(sum0); sum1 = float(sum1); n = float(n)
+        
+        stats_line = title + " " + self.gm.universe.teams[0].name + ": " + \
+            str(sum0/n) + ", " + self.gm.universe.teams[1].name  + ": " + str(sum1/n)
+        
+        print stats_line
+        self.f.write(stats_line + "\n")
+        
 
 if __name__ == "__main__":
     # define teams as dict: team name, 2 players
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     teams = {"FranziTest": [FoodEatingPlayer(), FoodEatingPlayer()],
              "SmartRandom": [FoodEatingPlayer(), FoodEatingPlayer()]}
     # initialize simulation  
-    sim = Simulation(teams, 10)
+    sim = Simulation(teams, 3)
     # actually run the simulation
     sim.run_simulation()
     sim.get_stats()
