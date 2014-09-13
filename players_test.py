@@ -3,7 +3,8 @@ from pelita.player import SimpleTeam
 from pelita.layout import get_random_layout
 from pelita.game_master import GameMaster
 
-from .demo_player import DrunkPlayer
+from demo_player import DrunkPlayer
+from franzi_player import FranziPlayer
 from players.FoodEatingPlayer import FoodEatingPlayer
 from players.SmartRandomPlayer import SmartRandomPlayer
 
@@ -42,7 +43,9 @@ class Simulation():
 
 if __name__ == "__main__":
     # define teams as dict: team name, 2 players
-    teams = {"FoodEaters": [FoodEatingPlayer(), FoodEatingPlayer()],
+    # teams = {"FoodEaters": [FoodEatingPlayer(), FoodEatingPlayer()],
+    #          "SmartRandom": [SmartRandomPlayer(), SmartRandomPlayer()]}
+    teams = {"FranziTest": [FranziPlayer('up'), FranziPlayer('down')],
              "SmartRandom": [SmartRandomPlayer(), SmartRandomPlayer()]}
     # initialize simulation  
     sim = Simulation(teams, 50)

@@ -11,7 +11,7 @@ from pelita.graph import AdjacencyList
 class FranziPlayer(AbstractPlayer):
     """ Basically a really awesome player. """
 
-    def __init__(self, priority_dir='stop', w_pdir=1, w_mate=-2, w_danger=-20, w_eat=3, w_defend=10, save_dist=5.):
+    def __init__(self, priority_dir='stop', w_pdir=1, w_mate=-3, w_danger=-20, w_eat=7, w_defend=10, save_dist=5.):
         """
         Attributes:
             - priority_dir: which direction to favor ('up' or 'down')
